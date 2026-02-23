@@ -159,21 +159,40 @@ function botUsername() {
 }
 
 // ---------- CHANNELS (SUPPORT UP TO 10) ----------
+function channelsList() {
+  return array_values(array_filter([
+    normalizeChannel(getenv("FORCE_JOIN_1")),
+    normalizeChannel(getenv("FORCE_JOIN_2")),
+    normalizeChannel(getenv("FORCE_JOIN_3")),
+    normalizeChannel(getenv("FORCE_JOIN_4")),
+    normalizeChannel(getenv("FORCE_JOIN_5")),
+    normalizeChannel(getenv("FORCE_JOIN_6")),
+    normalizeChannel(getenv("FORCE_JOIN_7")),
+    normalizeChannel(getenv("FORCE_JOIN_8")),
+    normalizeChannel(getenv("FORCE_JOIN_9")),
+    normalizeChannel(getenv("FORCE_JOIN_10")),
+  ]));
+}
+// ---------- UI ----------
+function joinMarkup() {
 $channels = channelsList();
+
 $keyboard = ['inline_keyboard' => []];
 
 for ($i = 0; $i < count($channels); $i += 2) {
 
     $row = [];
 
-    $ch1 = $channels[$i];
-    $url1 = (strpos($ch1, 'http') === 0) ? $ch1 : "https://t.me/" . ltrim($ch1, '@');
-    $row[] = ['text' => 'Join '.($i+1), 'url' => $url1];
+    $row[] = [
+        'text' => 'Join ' . ($i + 1),
+        'url' => $channels[$i]
+    ];
 
-    if (isset($channels[$i+1])) {
-        $ch2 = $channels[$i+1];
-        $url2 = (strpos($ch2, 'http') === 0) ? $ch2 : "https://t.me/" . ltrim($ch2, '@');
-        $row[] = ['text' => 'Join '.($i+2), 'url' => $url2];
+    if (isset($channels[$i + 1])) {
+        $row[] = [
+            'text' => 'Join ' . ($i + 2),
+            'url' => $channels[$i + 1]
+        ];
     }
 
     $keyboard['inline_keyboard'][] = $row;
@@ -182,32 +201,6 @@ for ($i = 0; $i < count($channels); $i += 2) {
 $keyboard['inline_keyboard'][] = [
     ['text' => '✅ Check Verification', 'callback_data' => 'check_verify']
 ];
-
-// If odd number → add last single button
-if (!empty($row)) {
-    $keyboard['inline_keyboard'][] = $row;
-}
-
-// Add verify button at bottom
-$keyboard['inline_keyboard'][] = [
-    ['text' => '✅ Check Verification', 'callback_data' => 'check_verify']
-];
-
-// ---------- UI ----------
-function joinMarkup() {
-  $chs = channelsList();
-  $rows = [];
-  $i = 1;
-  foreach ($chs as $ch) {
-    $rows[] = [[
-      "text" => "➕ Join $i",
-      "url"  => "https://t.me/" . ltrim($ch, "@")
-    ]];
-    $i++;
-  }
-  $rows[] = [[ "text" => "✅ Check Verification", "callback_data" => "check_join" ]];
-  return ["inline_keyboard" => $rows];
-}
 
 function verifyMenuMarkup($verifyUrl) {
   return ["inline_keyboard" => [
