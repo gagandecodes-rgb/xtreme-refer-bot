@@ -2,8 +2,11 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$content = file_get_contents("php://input");
-file_put_contents("debug.txt", $content . "\n\n", FILE_APPEND);
+$update = json_decode(file_get_contents("php://input"), true);
+
+if (!$update) {
+    exit("No input");
+}
 /**
  * ✅ FULL SINGLE-FILE index.php (Telegram Bot + Website Verify in SAME file)
  *
@@ -180,11 +183,11 @@ function channelsList() {
 }
 
 // ---------- UI ----------
-$channels = channelsList();
+if ($text == "/start") {
 
-$keyboard = ['inline_keyboard' => []];
+    $channels = channelsList();
 
-if (!empty($channels)) {
+    $keyboard = ['inline_keyboard' => []];
 
     for ($i = 0; $i < count($channels); $i += 2) {
 
@@ -192,19 +195,17 @@ if (!empty($channels)) {
 
         $ch1 = $channels[$i] ?? null;
         if ($ch1) {
-            $url1 = (strpos($ch1, 'http') === 0) ? $ch1 : "https://t.me/" . ltrim($ch1, '@');
             $row[] = [
                 'text' => 'Join ' . ($i + 1),
-                'url' => $url1
+                'url' => $ch1
             ];
         }
 
         $ch2 = $channels[$i + 1] ?? null;
         if ($ch2) {
-            $url2 = (strpos($ch2, 'http') === 0) ? $ch2 : "https://t.me/" . ltrim($ch2, '@');
             $row[] = [
                 'text' => 'Join ' . ($i + 2),
-                'url' => $url2
+                'url' => $ch2
             ];
         }
 
@@ -212,12 +213,17 @@ if (!empty($channels)) {
             $keyboard['inline_keyboard'][] = $row;
         }
     }
-}
 
-// Always add verify button
-$keyboard['inline_keyboard'][] = [
-    ['text' => '✅ Check Verification', 'callback_data' => 'check_verify']
-];
+    $keyboard['inline_keyboard'][] = [
+        ['text' => '✅ Check Verification', 'callback_data' => 'check_verify']
+    ];
+
+    file_get_contents("https://api.telegram.org/bot$token/sendMessage?" . http_build_query([
+        'chat_id' => $chat_id,
+        'text' => "✅ Join all channels then verify",
+        'reply_markup' => json_encode($keyboard)
+    ]));
+}
 
 function verifyMenuMarkup($verifyUrl) {
   return ["inline_keyboard" => [
