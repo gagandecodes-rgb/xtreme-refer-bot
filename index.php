@@ -175,7 +175,7 @@ function channelsList() {
 }
 
 // ---------- UI ----------
-function joinMarkup() 
+function joinMarkup()
 $channels = channelsList();
 
 $keyboard = ['inline_keyboard' => []];
