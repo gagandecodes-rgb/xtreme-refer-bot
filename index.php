@@ -176,60 +176,45 @@ function channelsList() {
 
 // ---------- UI ----------
 function joinMarkup() {
-  $chs = channelsList();
-  $rows = [];
-  $i = 1;
-  foreach ($chs as $ch) {
-    $rows[] = [[
-      "text" => "➕ Join $i",
-      "url"  => "https://t.me/" . ltrim($ch, "@")
-    ]];
-    $i++;
-  }
-  $rows[] = [[ "text" => "✅ Check Verification", "callback_data" => "check_join" ]];
-  return ["inline_keyboard" => $rows];
+  return [
+    "keyboard"=>[
+      [["text"=>"➕ Join Channels"]],
+      [["text"=>"✅ Check Verification"]]
+    ],
+    "resize_keyboard"=>true
+  ];
 }
 
 function verifyMenuMarkup($verifyUrl) {
-  return ["inline_keyboard" => [
-    [[ "text" => "✅ Verify Now", "url" => $verifyUrl ]],
-    [[ "text" => "✅ Check Verification", "callback_data" => "check_verified" ]]
-  ]];
+  return [
+    "keyboard"=>[
+      [["text"=>"✅ Verify Now"]],
+      [["text"=>"✅ Check Verification"]]
+    ],
+    "resize_keyboard"=>true
+  ];
 }
 
 function mainMenuMarkup($admin = false) {
   $rows = [
-    [
-      ["text" => "📊 Stats", "callback_data" => "stats"],
-      ["text" => "🎁 Withdraw", "callback_data" => "withdraw"]
-    ],
-    [
-      ["text" => "🔗 My Referral Link", "callback_data" => "reflink"]
-    ],
+    [["text"=>"📊 Stats"],["text"=>"🎁 Withdraw"]],
+    [["text"=>"🔗 My Referral Link"]]
   ];
-  if ($admin) $rows[] = [[ "text" => "🛠 Admin Panel", "callback_data" => "admin_panel" ]];
-  return ["inline_keyboard" => $rows];
+  if ($admin) $rows[] = [["text"=>"🛠 Admin Panel"]];
+  return ["keyboard"=>$rows,"resize_keyboard"=>true];
 }
 
 function adminPanelMarkup() {
-  return ["inline_keyboard" => [
-    [
-      ["text" => "➕ Add Coupon", "callback_data" => "admin_add_coupon"],
-      ["text" => "📦 Coupon Stock", "callback_data" => "admin_stock"]
+  return [
+    "keyboard"=>[
+      [["text"=>"➕ Add Coupon"],["text"=>"📦 Coupon Stock"]],
+      [["text"=>"🗂 Redeems Log"]],
+      [["text"=>"⚙ Change Withdraw Points"]],
+      [["text"=>"🎁 Get Free Code"]],
+      [["text"=>"⬅️ Back"]]
     ],
-    [
-      ["text" => "🗂 Redeems Log", "callback_data" => "admin_redeems"]
-    ],
-    [
-      ["text" => "⚙ Change Withdraw Points", "callback_data" => "admin_points"]
-    ],
-    [
-      ["text" => "🎁 Get Code (Free)", "callback_data" => "admin_free_get"]
-    ],
-    [
-      ["text" => "⬅️ Back", "callback_data" => "back_main"]
-    ]
-  ]];
+    "resize_keyboard"=>true
+  ];
 }
 
 function adminAmountOptionsKb($prefix, $backCb) {
@@ -460,13 +445,34 @@ if (!dbReady()) {
 }
 
 // ---------- MESSAGES ----------
-if (isset($update["message"])) {
-  $m = $update["message"];
-  $chat_id = $m["chat"]["id"];
-  $from_id = $m["from"]["id"];
-  $text = trim($m["text"] ?? "");
+// ================= TEXT TO CALLBACK BRIDGE =================
+$map = [
+  "📊 Stats" => "stats",
+  "🎁 Withdraw" => "withdraw",
+  "🔗 My Referral Link" => "reflink",
+  "🛠 Admin Panel" => "admin_panel",
+  "➕ Add Coupon" => "admin_add_coupon",
+  "📦 Coupon Stock" => "admin_stock",
+  "🗂 Redeems Log" => "admin_redeems",
+  "⚙ Change Withdraw Points" => "admin_points",
+  "🎁 Get Free Code" => "admin_free_get",
+  "⬅️ Back" => "back_main",
+  "✅ Check Verification" => "check_join"
+];
 
-  $stState = getState($from_id);
+if (isset($map[$text])) {
+  $update["callback_query"] = [
+    "id" => uniqid(),
+    "from" => ["id" => $from_id],
+    "message" => ["chat" => ["id" => $chat_id]],
+    "data" => $map[$text]
+  ];
+}
+
+if ($text == "✅ Verify Now") {
+  $url = makeVerifyLink($from_id);
+  sendMessage($chat_id, "🔗 Verify here:\n$url");
+}
 
   // State: admin add coupons
   if (isAdmin($from_id) && preg_match("/^await_coupon_(500|1000|2000|4000)$/", $stState, $mm) && $text !== "" && strpos($text, "/") !== 0) {
