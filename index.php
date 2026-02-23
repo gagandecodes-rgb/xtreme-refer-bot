@@ -173,8 +173,9 @@ function channelsList() {
     normalizeChannel(getenv("FORCE_JOIN_10")),
   ]));
 }
+
 // ---------- UI ----------
-function joinMarkup() {
+function joinMarkup() 
 $channels = channelsList();
 
 $keyboard = ['inline_keyboard' => []];
