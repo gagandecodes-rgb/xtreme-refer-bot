@@ -159,20 +159,37 @@ function botUsername() {
 }
 
 // ---------- CHANNELS (SUPPORT UP TO 10) ----------
-function channelsList() {
-  return array_values(array_filter([
-    normalizeChannel(getenv("FORCE_JOIN_1")),
-    normalizeChannel(getenv("FORCE_JOIN_2")),
-    normalizeChannel(getenv("FORCE_JOIN_3")),
-    normalizeChannel(getenv("FORCE_JOIN_4")),
-    normalizeChannel(getenv("FORCE_JOIN_5")),
-    normalizeChannel(getenv("FORCE_JOIN_6")),
-    normalizeChannel(getenv("FORCE_JOIN_7")),
-    normalizeChannel(getenv("FORCE_JOIN_8")),
-    normalizeChannel(getenv("FORCE_JOIN_9")),
-    normalizeChannel(getenv("FORCE_JOIN_10")),
-  ]));
+$channels = channelsList();
+
+$keyboard = ['inline_keyboard' => []];
+
+$row = [];
+$count = 1;
+
+foreach ($channels as $ch) {
+    $row[] = [
+        'text' => "Join $count",
+        'url' => $ch
+    ];
+
+    // Every 2 buttons → new row
+    if (count($row) == 2) {
+        $keyboard['inline_keyboard'][] = $row;
+        $row = [];
+    }
+
+    $count++;
 }
+
+// If odd number → add last single button
+if (!empty($row)) {
+    $keyboard['inline_keyboard'][] = $row;
+}
+
+// Add verify button at bottom
+$keyboard['inline_keyboard'][] = [
+    ['text' => '✅ Check Verification', 'callback_data' => 'check_verify']
+];
 
 // ---------- UI ----------
 function joinMarkup() {
