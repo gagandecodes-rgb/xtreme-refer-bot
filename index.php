@@ -1,4 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$content = file_get_contents("php://input");
+file_put_contents("debug.txt", $content . "\n\n", FILE_APPEND);
 /**
  * ✅ FULL SINGLE-FILE index.php (Telegram Bot + Website Verify in SAME file)
  *
@@ -179,25 +184,37 @@ $channels = channelsList();
 
 $keyboard = ['inline_keyboard' => []];
 
-for ($i = 0; $i < count($channels); $i += 2) {
+if (!empty($channels)) {
 
-    $row = [];
+    for ($i = 0; $i < count($channels); $i += 2) {
 
-    $row[] = [
-        'text' => 'Join ' . ($i + 1),
-        'url' => $channels[$i]
-    ];
+        $row = [];
 
-    if (isset($channels[$i + 1])) {
-        $row[] = [
-            'text' => 'Join ' . ($i + 2),
-            'url' => $channels[$i + 1]
-        ];
+        $ch1 = $channels[$i] ?? null;
+        if ($ch1) {
+            $url1 = (strpos($ch1, 'http') === 0) ? $ch1 : "https://t.me/" . ltrim($ch1, '@');
+            $row[] = [
+                'text' => 'Join ' . ($i + 1),
+                'url' => $url1
+            ];
+        }
+
+        $ch2 = $channels[$i + 1] ?? null;
+        if ($ch2) {
+            $url2 = (strpos($ch2, 'http') === 0) ? $ch2 : "https://t.me/" . ltrim($ch2, '@');
+            $row[] = [
+                'text' => 'Join ' . ($i + 2),
+                'url' => $url2
+            ];
+        }
+
+        if (!empty($row)) {
+            $keyboard['inline_keyboard'][] = $row;
+        }
     }
-
-    $keyboard['inline_keyboard'][] = $row;
 }
 
+// Always add verify button
 $keyboard['inline_keyboard'][] = [
     ['text' => '✅ Check Verification', 'callback_data' => 'check_verify']
 ];
