@@ -160,26 +160,28 @@ function botUsername() {
 
 // ---------- CHANNELS (SUPPORT UP TO 10) ----------
 $channels = channelsList();
-
 $keyboard = ['inline_keyboard' => []];
 
-$row = [];
-$count = 1;
+for ($i = 0; $i < count($channels); $i += 2) {
 
-foreach ($channels as $ch) {
-    $row[] = [
-        'text' => "Join $count",
-        'url' => $ch
-    ];
+    $row = [];
 
-    // Every 2 buttons → new row
-    if (count($row) == 2) {
-        $keyboard['inline_keyboard'][] = $row;
-        $row = [];
+    $ch1 = $channels[$i];
+    $url1 = (strpos($ch1, 'http') === 0) ? $ch1 : "https://t.me/" . ltrim($ch1, '@');
+    $row[] = ['text' => 'Join '.($i+1), 'url' => $url1];
+
+    if (isset($channels[$i+1])) {
+        $ch2 = $channels[$i+1];
+        $url2 = (strpos($ch2, 'http') === 0) ? $ch2 : "https://t.me/" . ltrim($ch2, '@');
+        $row[] = ['text' => 'Join '.($i+2), 'url' => $url2];
     }
 
-    $count++;
+    $keyboard['inline_keyboard'][] = $row;
 }
+
+$keyboard['inline_keyboard'][] = [
+    ['text' => '✅ Check Verification', 'callback_data' => 'check_verify']
+];
 
 // If odd number → add last single button
 if (!empty($row)) {
